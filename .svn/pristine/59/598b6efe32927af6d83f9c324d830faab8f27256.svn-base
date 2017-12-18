@@ -1,0 +1,12 @@
+event.title				= Title
+event.createMoment		= Date
+event.description		= Description
+event.picture			= Picture
+event.register			= Register
+event.unRegister		= Cancelar
+
+event.submit			= Register
+event.delete			= Delete
+event.cancel			= Cancel
+
+error.commit.seats		= Seats completed

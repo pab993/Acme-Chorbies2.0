@@ -1,0 +1,8 @@
+like.comment					= Comment
+like.doYouWantLeaveAComment		= Do you wish leave a message
+
+submit 							= Guardar
+cancel							= Cancelar
+
+like.error.commit				= error commit
+like.error.delete				= error delete

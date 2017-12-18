@@ -1,0 +1,14 @@
+event.title				= Title
+event.createMoment		= Date
+event.description		= Description
+event.picture			= Picture
+event.register			= Register
+event.unRegister		= Unregister
+event.seatsNumber		= Nº of seats
+
+event.submit			= Register
+event.delete			= Delete
+event.cancel			= Cancel
+
+error.commit.seats		= Seats completed
+manager.events.create	= Create a new event

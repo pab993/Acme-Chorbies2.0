@@ -1,0 +1,42 @@
+package repositories;
+
+import java.util.Collection;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import domain.Chirp;
+
+@Repository
+public interface ChirpRepository extends JpaRepository<Chirp, Integer> {
+
+	// @Query("select min(a.sendChirps.size) from Actor a")
+	// public Integer minMessagesSended();
+	//
+	// @Query("select max(a.sendChirps.size) from Actor a")
+	// public Integer maxMessagesSended();
+	//
+	// @Query("select avg(a.sendChirps.size) from Actor a")
+	// public Integer avgMessagesSended();
+
+	@Query("select c from Chirp c where c.chorbiSender.id=?1 or c.chorbiRecipient.id=?1")
+	public Collection<Chirp> findAllByChorbi(int chorbiId);
+
+	@Query("select count(c) from Chirp c join c.chorbiRecipient r where (select count(c1) from Chirp c1 join c1.chorbiRecipient r1 where r1.id=r.id group by r1)<=ALL(select count(c2) from Chirp c2 join c2.chorbiRecipient r2 group by r2) group by r")
+	public Integer minChirpsReceived();
+
+	@Query("select count(c) from Chirp c join c.chorbiRecipient r where (select count(c1) from Chirp c1 join c1.chorbiRecipient r1 where r1.id=r.id group by r1)>=ALL(select count(c2) from Chirp c2 join c2.chorbiRecipient r2 group by r2) group by r")
+	public Integer maxChirpsReceived();
+	
+	@Query("select 1.0*count(c)/(select count(ch) from Chorbi ch) from Chirp c")
+	public Double avgChirps();
+	
+	@Query("select count(c) from Chirp c join c.chorbiSender r where (select count(c1) from Chirp c1 join c1.chorbiSender r1 where r1.id=r.id group by r1)<=ALL(select count(c2) from Chirp c2 join c2.chorbiSender r2 group by r2) group by r")
+	public Integer minChirpsSends();
+	
+	@Query("select count(c) from Chirp c join c.chorbiSender r where (select count(c1) from Chirp c1 join c1.chorbiSender r1 where r1.id=r.id group by r1)>=ALL(select count(c2) from Chirp c2 join c2.chorbiSender r2 group by r2) group by r")
+	public Integer maxChirpsSends();
+	
+
+}

@@ -1,0 +1,183 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.transaction.Transactional;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import domain.Chorbi;
+import domain.Event;
+import domain.Manager;
+import domain.SearchTemplate;
+
+import utilities.AbstractTest;
+
+@Transactional
+@ContextConfiguration(locations = {
+	"classpath:spring/junit.xml"
+})
+@RunWith(SpringJUnit4ClassRunner.class)
+public class EventServiceTest extends AbstractTest{
+
+	// The SUT
+	// ====================================================
+		
+	@Autowired
+	private EventService eventService;
+		
+	// Tests
+	// ====================================================
+	
+	public void eventSaveTest(final String username, final String title, final String description, final Date date, final String picture, final int seats, final Class<?> expected) {
+		Class<?> caught = null;
+		
+		Event event = new Event();
+		event.setTitle(title);
+		event.setDescription(description);
+		event.setMoment(date);
+		event.setPicture(picture);
+		event.setSeatsNumber(seats);
+		Collection<Chorbi> chorbies = new ArrayList<Chorbi>();
+		event.setChorbies(chorbies);
+		
+		try {
+			authenticate(username);
+			
+			eventService.saveCreate(event);
+			
+			unauthenticate();
+
+		} catch (final Throwable oops) {
+
+			caught = oops.getClass();
+
+		}
+
+		this.checkExceptions(expected, caught);
+	}
+	
+	public void eventEditTest(final String username, final Event event, final Class<?> expected) {
+		Class<?> caught = null;
+		
+		try {
+			authenticate(username);
+			
+			eventService.save(event);
+			
+			unauthenticate();
+
+		} catch (final Throwable oops) {
+
+			caught = oops.getClass();
+
+		}
+
+		this.checkExceptions(expected, caught);
+	}
+	
+	public void eventDeleteTest(final String username, final Event event, final Class<?> expected) {
+		Class<?> caught = null;
+		
+		try {
+			authenticate(username);
+			
+			eventService.delete(event);
+			
+			unauthenticate();
+
+		} catch (final Throwable oops) {
+
+			caught = oops.getClass();
+
+		}
+
+		this.checkExceptions(expected, caught);
+	}
+	
+	
+	//Drivers
+	// ===================================================
+	
+	@Test
+	public void driverEventSaveTest() {
+		
+		long l = 100000;
+		Date futureDate = new Date(System.currentTimeMillis() + l);
+
+		Date pastDate = new Date(System.currentTimeMillis() - l);
+		
+		final Object testingData[][] = {
+			//  Todos los campos correctos -> true
+			{
+				"manager2", "evento34", "This is a event de la parra neng", futureDate, "http://www.imagen.com.mx/assets/img/imagen_share.png", 25, null
+			},
+			//  Registrar un evento con una credit card inválida /nula -> false
+			{
+				"manager1", "evento34", "This is a event de la parra neng", futureDate, "http://www.imagen.com.mx/assets/img/imagen_share.png", 25, NullPointerException.class
+			},
+			//  Registrar un evento con una fecha pasada-> false
+			{
+				"manager2", "evento34", "This is a event de la parra neng", pastDate, "http://www.imagen.com.mx/assets/img/imagen_share.png", 25, IllegalArgumentException.class
+			},
+			//  un número de sitios inválidos-> false
+			{
+				"manager2", "evento34", "This is a event de la parra neng", pastDate, "http://www.imagen.com.mx/assets/img/imagen_share.png", -5, IllegalArgumentException.class
+			}
+		};
+		for (int i = 0; i < testingData.length; i++)
+			this.eventSaveTest((String) testingData[i][0], (String) testingData[i][1], (String) testingData[i][2], (Date) testingData[i][3], (String) testingData[i][4], (int) testingData[i][5], (Class<?>) testingData[i][6]);
+	}
+	
+	@Test
+	public void driverEventEditTest() {
+		
+		final Object testingData[][] = {
+			//  Todos los campos correctos -> true
+			{
+				"manager3", eventService.findOne(453), null
+			},
+			//Editar un evento sin estar logueado -> false
+			{
+				null, eventService.findOne(453), IllegalArgumentException.class
+			},
+			//Editar un evento sin ser tuyo -> false
+			{
+				"manager1", eventService.findOne(453), IllegalArgumentException.class
+			}
+	
+		};
+		for (int i = 0; i < testingData.length; i++)
+			this.eventEditTest((String) testingData[i][0], (Event) testingData[i][1], (Class<?>) testingData[i][2]);
+	}
+	
+	@Test
+	public void driverEventDeleteTest() {
+		
+		final Object testingData[][] = {
+			//  Todos los campos correctos -> true
+			{
+				"manager3", eventService.findOne(453), null
+			},
+			//Borrar un evento sin estar logueado -> false
+			{
+				null, eventService.findOne(453), IllegalArgumentException.class
+			},
+			//Borrar un evento sin ser tuyo -> false
+			{
+				"manager1", eventService.findOne(453), IllegalArgumentException.class
+			}
+	
+		};
+		for (int i = 0; i < testingData.length; i++)
+			this.eventDeleteTest((String) testingData[i][0], (Event) testingData[i][1], (Class<?>) testingData[i][2]);
+	}
+}

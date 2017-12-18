@@ -1,0 +1,73 @@
+package controllers.manager;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import services.ActorService;
+import services.ChirpService;
+import services.ChorbiService;
+import services.EventService;
+import controllers.AbstractController;
+import domain.Chirp;
+import domain.Chorbi;
+import domain.Event;
+
+@Service
+@RequestMapping("/manager/events")
+public class ManagerChirpController extends AbstractController{
+	
+	//Services ===============================================================================
+
+		@Autowired
+		private ChirpService	chirpService;
+
+		//Constructor ============================================================================
+
+		public ManagerChirpController() {
+			super();
+		}
+		
+		//Broadcast ============================================================================
+		
+		@RequestMapping(value = "/broadcast", method = RequestMethod.GET)
+		public ModelAndView broadcast(@RequestParam int eventId) {
+			ModelAndView result;
+			Chirp chirpBroadcast;
+
+			chirpBroadcast = chirpService.create();
+			chirpBroadcast.setId(eventId);
+			
+			result = createEditModelAndViewBroadcast(chirpBroadcast);
+
+			return result;
+		}	
+		
+		protected ModelAndView createEditModelAndViewBroadcast(Chirp chirpBroadcast) {
+			ModelAndView result;
+
+			result = createEditModelAndViewBroadcast(chirpBroadcast, null);
+
+			return result;
+		}
+
+		protected ModelAndView createEditModelAndViewBroadcast(Chirp chirpBroadcast, String message) {
+			ModelAndView result;
+
+			result = new ModelAndView("chirp/editBroadcast");
+
+			result.addObject("chirpBroadcast", chirpBroadcast);
+			result.addObject("message", message);
+
+			return result;
+		}
+
+}

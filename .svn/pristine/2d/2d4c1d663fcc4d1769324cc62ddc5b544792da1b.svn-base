@@ -1,0 +1,186 @@
+package controllers.manager;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import services.ActorService;
+import services.ConfigurationSystemService;
+import services.CreditCardService;
+import services.EventService;
+import services.ManagerService;
+
+import controllers.AbstractController;
+import domain.Actor;
+import domain.Chorbi;
+import domain.ConfigurationSystem;
+import domain.CreditCard;
+import domain.Event;
+import domain.Manager;
+
+@Service
+@RequestMapping("/manager/events")
+public class ManagerEventController extends AbstractController{
+	
+	// Services
+	// ===============================================================================
+	
+	@Autowired
+	private EventService eventService;
+	
+	@Autowired
+	private ManagerService managerService;
+	
+	@Autowired
+	private ActorService actorService;
+	
+	@Autowired
+	private ConfigurationSystemService configurationSystemService;
+	
+	@Autowired
+	private CreditCardService creditCardService;
+	
+	// Constructor
+	// ============================================================================
+
+	public ManagerEventController() {
+		super();
+	}
+
+	// Listing
+	// ====================================================================================
+
+	@RequestMapping(value = "/list", method = RequestMethod.GET)
+	public ModelAndView list() {
+		ModelAndView result;
+		Collection<Event> events;
+		
+		events = eventService.findAll();
+		
+		ConfigurationSystem cs = configurationSystemService.getCS();
+		Manager manager = managerService.findByPrincipal();
+		
+		result = new ModelAndView("event/list");
+		result.addObject("csFee", cs.getManagerFee());
+		result.addObject("principal", manager);
+		result.addObject("events", events);
+		result.addObject("requestURI", "event/list.do");
+		return result;
+	}
+	
+	@RequestMapping(value = "/myEvents", method = RequestMethod.GET)
+	public ModelAndView myEvents() {
+		ModelAndView result;
+		Collection<Event> events;
+		
+		Manager manager = managerService.findByPrincipal();
+		
+		events = eventService.findEventsByManager(manager.getId());
+		
+		result = new ModelAndView("event/list");
+		result.addObject("principal", manager);
+		result.addObject("events", events);
+		result.addObject("requestURI", "event/list.do");
+		return result;
+	}
+	
+	//Creating
+	// ===========================================================================
+
+	@RequestMapping(value = "/create", method = RequestMethod.GET)
+	public ModelAndView create() {
+		ModelAndView result;
+		Event event;
+		event = eventService.create();
+		result = createEditModelAndView(event);
+
+		return result;
+	}
+	
+	//Editing
+	// ===============================================================================
+	
+	@RequestMapping(value = "/edit", method = RequestMethod.GET)
+	public ModelAndView editReply(@RequestParam int eventId) {
+		ModelAndView result;
+		Event event;
+
+		event = eventService.findOne(eventId);
+		
+		result = createEditModelAndView(event);
+
+		return result;
+	}
+	
+	@RequestMapping(value = "/edit", method = RequestMethod.POST, params = "save")
+	public ModelAndView save(@Valid Event event, BindingResult binding) {
+		ModelAndView result;
+		Manager manager = managerService.findByPrincipal();
+		CreditCard creditCard = creditCardService.findByManagerId(manager.getId());
+
+		if (binding.hasErrors()) {
+			result = createEditModelAndView(event);
+		} else {
+			try {
+				if(event.getId() != 0){
+					eventService.save(event);
+					result = new ModelAndView("redirect:/manager/events/myEvents.do");
+				}else if(event.getId() == 0 && creditCard != null && creditCardService.checkValidity(creditCard)){
+					eventService.saveCreate(event);
+					result = new ModelAndView("redirect:/manager/events/myEvents.do");
+				}else{
+					result = createEditModelAndView(event, "event.commit.error.creditCard");
+				}
+				
+			} catch (Throwable oops) {
+				result = createEditModelAndView(event, "event.commit.error");
+			}
+		}
+		return result;
+	}
+	
+	
+	@RequestMapping(value = "/edit", method = RequestMethod.POST, params = "delete")
+	public ModelAndView delete(@Valid Event event, BindingResult binding) {
+		ModelAndView result;
+
+		try {
+			eventService.delete(event);
+			result = new ModelAndView("redirect:/manager/events/myEvents.do");
+		} catch (Throwable oops) {
+			result = createEditModelAndView(event, "event.commit.error");
+		}
+		return result;
+	}
+	
+	// Ancillary Methods
+	// ===============================================================================
+
+	protected ModelAndView createEditModelAndView(Event event) {
+		ModelAndView result;
+
+		result = createEditModelAndView(event, null);
+		return result;
+	}
+
+	protected ModelAndView createEditModelAndView(Event event, String message) {
+		ModelAndView result;
+
+		result = new ModelAndView("event/edit");
+
+		result.addObject("event", event);
+		result.addObject("message", message);
+
+		return result;
+	}
+	
+}

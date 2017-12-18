@@ -1,0 +1,109 @@
+package services;
+
+import java.util.Collection;
+import java.util.Date;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import domain.Chorbi;
+import domain.ConfigurationSystem;
+import domain.Event;
+import domain.Manager;
+import domain.SearchTemplate;
+
+import repositories.EventRepository;
+
+@Transactional
+@Service
+public class EventService {
+
+	//Repository
+	//======================================================================
+	
+	@Autowired
+	private EventRepository	eventRepository;
+	
+	//Services
+	// ======================================================================
+	
+	@Autowired
+	private ManagerService managerService;
+	
+	@Autowired
+	private ConfigurationSystemService configurationSystemService;
+	
+	@Autowired
+	private CreditCardService creditCardService;
+	
+	//CRUD methods
+	//=======================================================================
+	
+	public Event findOne(int id){
+		Event event;
+		
+		event = eventRepository.findOne(id);
+		Assert.notNull(event);
+		
+		return event;
+	}
+	
+	
+	public Event create(){
+		Event e = new Event();
+		return e;
+	}
+	
+	public Collection<Event> findAll() {
+
+		Collection<Event> events;
+
+		events = eventRepository.findAll();
+		Assert.notNull(events);
+
+		return events;
+	}
+	
+	
+	public Event save(Event event) {
+		Assert.notNull(event);
+		Event result;
+		Manager manager;
+		
+		manager = managerService.findByPrincipal();
+		Assert.isTrue(manager.getEvents().contains(event));
+//		Assert.isTrue(creditCardService.checkValidity(manager.getCreditCard()));
+		result = eventRepository.save(event);
+
+		return result;
+	}
+	
+	public Event saveCreate(Event event) {
+		Assert.notNull(event);
+		Event result;
+		Manager manager;
+		
+//		Assert.isTrue(creditCardService.checkValidity(manager.getCreditCard()));
+		ConfigurationSystem cs = configurationSystemService.getCS();
+		manager = managerService.findByPrincipal();
+		Assert.isTrue(manager.getEvents().contains(event));
+		manager.setFee(manager.getFee() + cs.getFee());
+		result = eventRepository.save(event);
+
+		return result;
+	}
+	
+	public void delete(Event event){
+		
+		Assert.notNull(event);
+		Manager manager = managerService.findByPrincipal();
+		Assert.isTrue(eventRepository.exists(event.getId()));
+		Assert.isTrue(manager.getEvents().contains(event));
+		
+		eventRepository.delete(event);
+		
+	}
+}

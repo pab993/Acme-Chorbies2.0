@@ -1,0 +1,78 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import javax.transaction.Transactional;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import domain.Event;
+import domain.Manager;
+import domain.SearchTemplate;
+
+import utilities.AbstractTest;
+
+@Transactional
+@ContextConfiguration(locations = {
+	"classpath:spring/junit.xml"
+})
+@RunWith(SpringJUnit4ClassRunner.class)
+public class EventServiceTest extends AbstractTest{
+
+	// The SUT
+	// ====================================================
+		
+	@Autowired
+	private EventService eventService;
+		
+	// Tests
+	// ====================================================
+	
+	public void eventSaveTest(final String username, final Class<?> expected) {
+		Class<?> caught = null;
+		
+		
+		
+		try {
+			
+			
+
+		} catch (final Throwable oops) {
+
+			caught = oops.getClass();
+
+		}
+
+		this.checkExceptions(expected, caught);
+	}
+	
+	
+	//Drivers
+	// ===================================================
+	
+	@Test
+	public void driverEventSaveTest() {
+		final Object testingData[][] = {
+			//  -> true
+			{
+				
+			},
+			//  -> false
+			{
+				
+			},
+			//  -> false
+			{
+				
+			}
+		};
+		for (int i = 0; i < testingData.length; i++)
+			this.eventSaveTest((String) testingData[i][0], (Class<?>) testingData[i][2]);
+	}
+}

@@ -1,0 +1,103 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import domain.Chorbi;
+import domain.Manager;
+import domain.SearchTemplate;
+
+import repositories.EventRepository;
+import repositories.ManagerRepository;
+import security.Authority;
+import security.LoginService;
+import security.UserAccount;
+
+@Transactional
+@Service
+public class ManagerService {
+
+	//Repository
+	//======================================================================
+	
+	@Autowired
+	private ManagerRepository	managerRepository;
+	
+	//Services
+	// ======================================================================
+	
+	
+	//CRUD methods
+	//=======================================================================
+	
+	public Manager findOne(int id){
+		Manager manager;
+		
+		manager = managerRepository.findOne(id);
+		Assert.notNull(manager);
+		
+		return manager;
+	}
+	
+	
+	public Manager create(){
+
+		Manager manager = new Manager();
+
+		UserAccount userAccount = new UserAccount();
+		Collection<Authority> authorities = new ArrayList<Authority>();
+		Authority authority = new Authority();
+		authority.setAuthority("MANAGER");
+		authorities.add(authority);
+		userAccount.setAuthorities(authorities);
+		userAccount.setEnabled(true);
+
+		manager.setUserAccount(userAccount);
+
+		return manager;
+	}
+	
+	public Collection<Manager> findAll() {
+
+		Collection<Manager> managers;
+
+		managers = managerRepository.findAll();
+		Assert.notNull(managers);
+
+		return managers;
+	}
+	
+	
+	public Manager save(Manager manager) {
+		Assert.notNull(manager);
+
+		Manager saved = managerRepository.save(manager);
+		Assert.isTrue(managerRepository.exists(saved.getId()));
+
+		return saved;
+	}
+	
+	
+	//Other Bussiness methods
+	//=======================================================================
+	
+	
+	public Manager findByPrincipal() {
+		Manager result;
+		UserAccount userAccount;
+		userAccount = LoginService.getPrincipal();
+		Assert.notNull(userAccount);
+		Assert.isTrue(userAccount.getId() != 0);
+
+		result = managerRepository.findByUserAccountId(userAccount.getId());
+		Assert.notNull(result);
+
+		return result;
+	}
+}

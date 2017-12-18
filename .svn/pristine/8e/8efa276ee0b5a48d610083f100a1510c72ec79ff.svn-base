@@ -1,0 +1,23 @@
+package repositories;
+
+import java.util.Collection;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import domain.Event;
+
+@Repository
+public interface EventRepository extends JpaRepository<Event, Integer>{
+
+	// Devuelve eventos en los que el chorbi está registrado
+	
+	@Query("select e from Event e join e.chorbies c where c.id = ?1")
+	Collection<Event> findAllRegistered(int id);
+
+	//Devuelve los eventos pertenecientes a un manager
+	@Query("select m.events from Manager m where m.id = ?1")
+	Collection<Event> findEventsByManager(int idManager);
+	
+}

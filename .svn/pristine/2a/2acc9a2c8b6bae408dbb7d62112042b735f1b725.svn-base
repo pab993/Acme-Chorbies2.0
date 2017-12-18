@@ -1,0 +1,189 @@
+package services;
+
+import java.security.Principal;
+import java.util.Collection;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import repositories.EventRepository;
+import domain.Actor;
+import domain.Chorbi;
+import domain.ConfigurationSystem;
+import domain.CreditCard;
+import domain.Event;
+import domain.Manager;
+
+@Transactional
+@Service
+public class EventService {
+
+	//Repository
+	//======================================================================
+	
+	@Autowired
+	private EventRepository	eventRepository;
+	
+	//Services
+	// ======================================================================
+	
+	@Autowired
+	private ChorbiService chorbiService;
+	
+	@Autowired
+	private ManagerService managerService;
+	
+	@Autowired
+	private ConfigurationSystemService configurationSystemService;
+	
+	@Autowired
+	private CreditCardService creditCardService;
+	
+	@Autowired
+	private ActorService actorService;
+	
+	//CRUD methods
+	//=======================================================================
+	
+	public Event findOne(int id){
+		Event event;
+		
+		event = eventRepository.findOne(id);
+		Assert.notNull(event);
+		
+		return event;
+	}
+	
+	
+	public Event create(){
+		Event e = new Event();
+		Assert.isInstanceOf(Manager.class, actorService.findByPrincipal());
+		return e;
+	}
+	
+	public Collection<Event> findAll() {
+
+		Collection<Event> events;
+
+		events = eventRepository.findAll();
+		Assert.notNull(events);
+
+		return events;
+	}
+	
+	
+	public Event save(Event event) {
+		Assert.notNull(event);
+		Event result;
+		Manager manager;
+		
+		manager = managerService.findByPrincipal();
+
+		Assert.isTrue(manager.getEvents().contains(event));
+		result = eventRepository.save(event);
+
+		return result;
+	}
+	
+	public Event saveCreate(Event event) {
+		Assert.notNull(event);
+		Event result;
+		Manager manager;
+		
+//		Assert.isTrue(creditCardService.checkValidity(manager.getCreditCard()));
+		ConfigurationSystem cs = configurationSystemService.getCS();
+		manager = managerService.findByPrincipal();
+		CreditCard creditCard = creditCardService.findByManagerId(manager.getId());
+		Assert.isTrue(creditCardService.checkValidity(creditCard));
+		manager.setFee(manager.getFee() + cs.getManagerFee());
+		result = eventRepository.save(event);
+		manager.getEvents().add(result);
+		managerService.save(manager);
+
+		return result;
+	}
+	
+	public void delete(Event event){
+		
+		Assert.notNull(event);
+		Manager manager = managerService.findByPrincipal();
+		Assert.isTrue(eventRepository.exists(event.getId()));
+		Assert.isTrue(manager.getEvents().contains(event));
+		manager.getEvents().remove(event);
+		
+		eventRepository.delete(event);
+		
+	}
+
+
+	public Event register(Event event) {
+		// TODO Auto-generated method stub
+		
+		
+		Chorbi principal = chorbiService.findByPrincipal();
+		
+		check(event);
+		
+		event.getChorbies().add(principal);
+		principal.getEvents().add(event);
+		
+		Event saved  = eventRepository.save(event);
+		chorbiService.save(principal);
+		
+		return saved;
+	}
+	
+	public Event unRegister(Event event) {
+		// TODO Auto-generated method stub
+		
+		Chorbi principal = chorbiService.findByPrincipal();
+		
+		check2(event);
+		
+		event.getChorbies().remove(principal);
+		principal.getEvents().remove(event);
+				
+		Event saved  = eventRepository.save(event);
+		chorbiService.save(principal);
+		
+		return saved;
+	}
+
+
+	private void check2(Event event) {
+		// TODO Auto-generated method stub
+		Assert.isTrue(event.getChorbies().contains(chorbiService.findByPrincipal())); // chorbi no esta registrado en el evento
+	}
+
+
+	private void check(Event event) {
+		// TODO Auto-generated method stub
+		
+		Assert.isTrue(event.getChorbies().size() < event.getSeatsNumber());	// asientos suficientes
+		Assert.isTrue(!event.getChorbies().contains(chorbiService.findByPrincipal())); // chorbi no esta registrado en el evento
+	}
+
+
+	public Collection<Event> findAllRegistered(int id) {
+		// TODO Auto-generated method stub
+		Assert.notNull(id);
+		
+		Collection<Event> events = eventRepository.findAllRegistered(id);
+		
+		return events;
+	}
+
+	public Collection<Event> findEventsByManager(int idManager){
+		Assert.notNull(idManager);
+		
+		Collection<Event> events = eventRepository.findEventsByManager(idManager);
+		
+		Assert.notNull(events);
+		return events;
+		
+	}
+	
+}
